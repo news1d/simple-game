@@ -26,7 +26,12 @@ export class Game {
     #google
     #googleSetIntervalId
 
-    constructor() {}
+    eventEmitter
+
+    constructor(eventEmitter) {
+        this.eventEmitter = eventEmitter;
+    }
+
 
     set settings(settings) {
         this.#settings = { ...this.#settings, ...settings };
@@ -67,6 +72,7 @@ export class Game {
 
             this.#runGoogleJumpInterval()
 
+            this.eventEmitter.emit('change');
         }
     }
 
@@ -89,15 +95,14 @@ export class Game {
     #getRandomPosition(coordinates) {
         let newX, newY;
 
-
         do {
             newX = NumberUtils.getRandomNumber(this.#settings.gridSize.columns);
             newY = NumberUtils.getRandomNumber(this.#settings.gridSize.rows);
         } while (coordinates.some((el) => el.x === newX && el.y === newY));
 
-
         return new Position(newX, newY);
     }
+
 
     #createUnits() {
         const player1Position = this.#getRandomPosition([]);
@@ -118,6 +123,7 @@ export class Game {
         }
 
         this.#google = new Google(this.#getRandomPosition(notCrossedPosition));
+        this.eventEmitter.emit('change')
     }
 
     #checkBorders(player, delta) {
@@ -125,11 +131,11 @@ export class Game {
         if (delta.x) newPosition.x += delta.x;
         if (delta.y) newPosition.y += delta.y;
 
-        if (newPosition.x < 1 || newPosition.x > this.#settings.gridSize.columns) {
+        if (newPosition.x < 0 || newPosition.x >= this.#settings.gridSize.columns) {
             return true;
         }
 
-        if (newPosition.y < 1 || newPosition.y > this.#settings.gridSize.rows) {
+        if (newPosition.y < 0 || newPosition.y >= this.#settings.gridSize.rows) {
             return true;
         }
 
@@ -181,7 +187,7 @@ export class Game {
             );
         }
         this.#checkGoogleCatching(movingPlayer);
-        // this.eventEmiter.emit("change");
+        this.eventEmitter.emit('change');
     }
 
     movePlayer1Right() {
