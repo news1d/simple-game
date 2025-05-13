@@ -1,8 +1,8 @@
 import {Position} from "./position.js";
-import {GameStatuses} from "../utils/game-statuses.js";
 import {Google} from "./google.js";
-import {NumberUtils} from "../utils/number-utils.js";
 import {Player} from "./player.js";
+import {GameStatuses} from "./game-statuses.js";
+import {NumberUtils} from "./number-utils.js";
 
 export class Game {
     #settings = {
@@ -45,7 +45,11 @@ export class Game {
         return this.#settings;
     }
 
-    get score() {
+    get gridSize() {
+        return this.#settings.gridSize;
+    }
+
+    get scores() {
         return this.#score;
     }
 
@@ -65,7 +69,7 @@ export class Game {
         return this.#google;
     }
 
-    async start() {
+    start() {
         if (this.#status === GameStatuses.SETTINGS) {
             this.#createUnits();
             this.#status = GameStatuses.IN_PROGRESS;
@@ -76,14 +80,37 @@ export class Game {
         }
     }
 
-    async stop() {
+    stop() {
         clearInterval(this.#googleSetIntervalId);
         this.#status = GameStatuses.STOPPED;
     }
 
-    async #finishGame() {
+    restart() {
         clearInterval(this.#googleSetIntervalId);
+
+        this.#score = {
+            1: { points: 0 },
+            2: { points: 0 },
+        };
+
+        this.#status = GameStatuses.SETTINGS;
+
+        this.#player1 = null;
+        this.#player2 = null;
+        this.#google = null;
+
+        this.eventEmitter.emit('change');
+    }
+
+
+    #finishGame() {
+        clearInterval(this.#googleSetIntervalId);
+
         this.#status = GameStatuses.FINISHED;
+
+        this.#player1 = null;
+        this.#player2 = null;
+        this.#google = null;
     }
 
     #runGoogleJumpInterval() {
@@ -165,29 +192,31 @@ export class Game {
     }
 
     #movePlayer(movingPlayer, anotherPlayer, delta) {
-        const isBorder = this.#checkBorders(movingPlayer, delta);
-        const isAnotherPlayer = this.#checkOtherPlayer(
-            movingPlayer,
-            anotherPlayer,
-            delta
-        );
-        if (isBorder || isAnotherPlayer) {
-            return;
-        }
+        if (this.#status === GameStatuses.IN_PROGRESS) {
+            const isBorder = this.#checkBorders(movingPlayer, delta);
+            const isAnotherPlayer = this.#checkOtherPlayer(
+                movingPlayer,
+                anotherPlayer,
+                delta
+            );
+            if (isBorder || isAnotherPlayer) {
+                return;
+            }
 
-        if (delta.x) {
-            movingPlayer.position = new Position(
-                movingPlayer.position.x + delta.x,
-                movingPlayer.position.y
-            );
-        } else {
-            movingPlayer.position = new Position(
-                movingPlayer.position.x,
-                movingPlayer.position.y + delta.y,
-            );
+            if (delta.x) {
+                movingPlayer.position = new Position(
+                    movingPlayer.position.x + delta.x,
+                    movingPlayer.position.y
+                );
+            } else {
+                movingPlayer.position = new Position(
+                    movingPlayer.position.x,
+                    movingPlayer.position.y + delta.y,
+                );
+            }
+            this.#checkGoogleCatching(movingPlayer);
+            this.eventEmitter.emit('change');
         }
-        this.#checkGoogleCatching(movingPlayer);
-        this.eventEmitter.emit('change');
     }
 
     movePlayer1Right() {

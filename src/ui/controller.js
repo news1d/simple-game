@@ -16,6 +16,11 @@ export class Controller {
             this.#render()
         }
 
+        this.#view.onrestart = () => {
+            this.#game.restart();
+            this.#render()
+        }
+
         this.#view.onplayermove = {
             movePlayer1Up: () => this.#game.movePlayer1Up(),
             movePlayer1Down: () => this.#game.movePlayer1Down(),
@@ -30,22 +35,22 @@ export class Controller {
         };
 
     }
+
     init () {
         this.#render()
     }
 
     #render() {
-        const settings = this.#game.settings;
         const dto = {
             status: this.#game.status,
-            gridSize: settings.gridSize,
+            gridSize: this.#game.gridSize,
             googlePosition: this.#game.google ? this.#game.google.position : null,
 
             player1Position: this.#game.player1 ? this.#game.player1.position : null,
             player2Position: this.#game.player2 ? this.#game.player2.position : null,
 
-            player1Points: this.#game.score[1] ? this.#game.score[1].points : null,
-            player2Points: this.#game.score[2] ? this.#game.score[2].points : null,
+            player1Points: this.#game.scores[1] ? this.#game.scores[1].points : null,
+            player2Points: this.#game.scores[2] ? this.#game.scores[2].points : null,
         }
         this.#view.render(dto);
     }

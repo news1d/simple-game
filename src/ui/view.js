@@ -1,10 +1,12 @@
-import {GameStatuses} from "../utils/game-statuses.js";
+import {GameStatuses} from "../core/game-statuses.js";
 import {GridComponent} from "./components/grid/grid.component.js";
 import {SettingsComponent} from "./components/settings/settings.component.js";
+import {RestartComponent} from "./components/restart/restart.component.js";
 
 export class View {
     onstart = null;
     onplayermove = null;
+    onrestart = null;
 
     constructor() {
         document.addEventListener('keydown', (e) => {
@@ -58,6 +60,10 @@ export class View {
             const gridComponent = new GridComponent();
             const gridElement = gridComponent.render(dto);
             rootElement.append(gridElement)
+        } else if (dto.status === GameStatuses.FINISHED) {
+            const restartComponent = new RestartComponent({onrestart: this.onrestart});
+            const restartElement = restartComponent.render(dto);
+            rootElement.append(restartElement)
         }
     }
 }
